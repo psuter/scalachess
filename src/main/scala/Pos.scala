@@ -44,6 +44,7 @@ sealed case class Pos private (x: Int, y: Int, piotr: Char) {
   val key = file + rank
   val color = Color((x % 2 == 0) ^ (y % 2 == 0))
   val piotrStr = piotr.toString
+  val code = (x - 1) + 8 * (y - 1)
 
   override val toString = key
 }

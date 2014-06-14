@@ -6,6 +6,13 @@ case class Castles(
     blackKingSide: Boolean,
     blackQueenSide: Boolean) {
 
+  lazy val code: Int = {
+    (if(whiteKingSide)  1 else 0) +
+    (if(whiteQueenSide) 2 else 0) +
+    (if(blackKingSide)  4 else 0) +
+    (if(blackQueenSide) 8 else 0)
+  }
+
   def can(color: Color) = new {
     def on(side: Side): Boolean = (color, side) match {
       case (White, KingSide)  => whiteKingSide

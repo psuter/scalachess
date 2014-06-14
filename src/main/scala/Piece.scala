@@ -25,5 +25,7 @@ case class Piece(color: Color, role: Role) {
     }
   }
 
+  val code = role.code + color.fold(0, 6)
+
   override def toString = (color + "-" + role).toLowerCase
 }

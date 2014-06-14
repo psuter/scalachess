@@ -9,6 +9,7 @@ sealed trait Role {
   val attacker: Boolean = true
   val projection: Boolean = false
   def dirs: Directions
+  val code:Int
 }
 sealed trait PromotableRole extends Role
 sealed trait Projection extends Role {
@@ -20,11 +21,13 @@ case object King extends Role {
   val forsyth = 'k'
   val dirs: Directions = Queen.dirs
   override val attacker = false
+  val code = 0
 }
 case object Queen extends PromotableRole with Projection {
   val forsyth = 'q'
   val dirs: Directions = Rook.dirs ::: Bishop.dirs
   def dir(from: Pos, to: Pos) = Rook.dir(from, to) orElse Bishop.dir(from, to)
+  val code = 1
 }
 case object Rook extends PromotableRole with Projection {
   val forsyth = 'r'
@@ -36,6 +39,7 @@ case object Rook extends PromotableRole with Projection {
     if (to ?< from) (_.left) else (_.right)
   )
   else None
+  val code = 2
 }
 case object Bishop extends PromotableRole with Projection {
   val forsyth = 'b'
@@ -47,6 +51,7 @@ case object Bishop extends PromotableRole with Projection {
       if (to ?< from) (_.downLeft) else (_.downRight)
     }
   ) else None
+  val code = 3
 }
 case object Knight extends PromotableRole {
   val forsyth = 'n'
@@ -59,10 +64,12 @@ case object Knight extends PromotableRole {
     _.right flatMap (_.downRight),
     _.down flatMap (_.downLeft),
     _.down flatMap (_.downRight))
+  val code = 4
 }
 case object Pawn extends Role {
   val forsyth = 'p'
   val dirs: Directions = Nil
+  val code = 5
 }
 
 object Role {

@@ -4,7 +4,6 @@ trait Resolvers {
   val iliaz = "iliaz.com" at "http://scala.iliaz.com/"
   val sonatype = "sonatype" at "http://oss.sonatype.org/content/repositories/releases"
   val awesomepom = "awesomepom" at "https://raw.github.com/jibs/maven-repo-scala/master"
-  val roundeights = "RoundEights" at "http://maven.spikemark.net/roundeights"
 }
 
 trait Dependencies {
