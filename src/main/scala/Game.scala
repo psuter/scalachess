@@ -71,4 +71,9 @@ object Game {
   def apply(variant: Variant): Game = new Game(
     board = Board init variant
   )
+
+  def apply(situation: Situation): Game = new Game(
+    board = situation.board,
+    player = situation.color
+  )
 }

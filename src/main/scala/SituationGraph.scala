@@ -4,7 +4,7 @@ package chess
 trait SituationGraph[E,T] {
   def nodeCount: Int
 
-  def nodes: Iterable[T]
+  def nodes: Iterable[(Long,T)]
 
   def isDefinedAt(z: Long): Boolean
 
@@ -29,7 +29,7 @@ object SituationGraph {
     
     val nodeCount: Int = ns.size 
 
-    def nodes: Iterable[T] = ns.values
+    def nodes: Iterable[(Long,T)] = ns.toIterable
 
     def isDefinedAt(z: Long): Boolean = zs(z)
 
