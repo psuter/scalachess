@@ -144,17 +144,31 @@ class OpeningBook(val openings: Seq[(String,String,String)]) {
       ret
     }
 
+
     val n = GraphNode(Situation(Variant.Standard), Set.empty)
     val h = Zobrist.hash(n.situation)
     val g: OpeningGraph = SituationGraph.empty.withNode(h, n)
 
-    connect(
-      //connect(
-        addBranch(g, h, n, tree),
-      //  true
-      //),
-      false
-    )
+
+    // Equivalent to tree only:
+   
+    val g1 = time("Graph generation") {
+      addBranch(g, h, n, tree)
+    }
+
+    val g2 = time("Connection") {
+      connect(g1, false)
+    }
+
+    g2
+  }
+
+  private def time[T](desc: String)(op: =>T) : T = {
+    val t0 = System.currentTimeMillis
+    val v = op
+    val t1 = System.currentTimeMillis
+    println(s"$desc : ${(t1 - t0) / 1000.0}")
+    v
   }
 
   // TODO FIXME: this could be useful elsewhere, maybe move?
