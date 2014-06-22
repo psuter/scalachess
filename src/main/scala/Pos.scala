@@ -2,18 +2,20 @@ package chess
 
 import scala.math.{ min, max, abs }
 
-sealed case class Pos private (x: Int, y: Int, piotr: Char) {
-
+class Pos private(val z: Byte) extends AnyVal {
   import Pos.posAt
 
-  lazy val up: Option[Pos] = posAt(x, y + 1)
-  lazy val down: Option[Pos] = posAt(x, y - 1)
-  lazy val right: Option[Pos] = posAt(x + 1, y)
-  lazy val left: Option[Pos] = posAt(x - 1, y)
-  lazy val upLeft: Option[Pos] = up flatMap (_ left)
-  lazy val upRight: Option[Pos] = up flatMap (_ right)
-  lazy val downLeft: Option[Pos] = down flatMap (_ left)
-  lazy val downRight: Option[Pos] = down flatMap (_ right)
+  def x: Int = 1 + (z % 8)
+  def y: Int = 1 + (z / 8)
+
+  def up: Option[Pos] = posAt(x, y + 1)
+  def down: Option[Pos] = posAt(x, y - 1)
+  def right: Option[Pos] = posAt(x + 1, y)
+  def left: Option[Pos] = posAt(x - 1, y)
+  def upLeft: Option[Pos] = up flatMap (_ left)
+  def upRight: Option[Pos] = up flatMap (_ right)
+  def downLeft: Option[Pos] = down flatMap (_ left)
+  def downRight: Option[Pos] = down flatMap (_ right)
 
   def >|(stop: Pos => Boolean): List[Pos] = |<>|(stop, _.right)
   def |<(stop: Pos => Boolean): List[Pos] = |<>|(stop, _.left)
@@ -39,13 +41,15 @@ sealed case class Pos private (x: Int, y: Int, piotr: Char) {
   def xDist(other: Pos) = abs(x - other.x)
   def yDist(other: Pos) = abs(y - other.y)
 
-  val file = Pos xToString x
-  val rank = y.toString
-  val key = file + rank
-  val color = Color((x % 2 == 0) ^ (y % 2 == 0))
-  val piotrStr = piotr.toString
+  def file = Pos xToString x
+  def rank = y.toString
+  def key = file + rank
+  def color = Color((x % 2 == 0) ^ (y % 2 == 0))
 
-  override val toString = key
+  def piotr = Pos piotrChars z
+  def piotrStr = piotr.toString
+
+  override def toString = key
 }
 
 object Pos {
@@ -68,70 +72,81 @@ object Pos {
     b ← piotr(piotrs(1))
   } yield s"${a.key}${b.key}"
 
-  val A1 = Pos(1, 1, 'a')
-  val B1 = Pos(2, 1, 'b')
-  val C1 = Pos(3, 1, 'c')
-  val D1 = Pos(4, 1, 'd')
-  val E1 = Pos(5, 1, 'e')
-  val F1 = Pos(6, 1, 'f')
-  val G1 = Pos(7, 1, 'g')
-  val H1 = Pos(8, 1, 'h')
-  val A2 = Pos(1, 2, 'i')
-  val B2 = Pos(2, 2, 'j')
-  val C2 = Pos(3, 2, 'k')
-  val D2 = Pos(4, 2, 'l')
-  val E2 = Pos(5, 2, 'm')
-  val F2 = Pos(6, 2, 'n')
-  val G2 = Pos(7, 2, 'o')
-  val H2 = Pos(8, 2, 'p')
-  val A3 = Pos(1, 3, 'q')
-  val B3 = Pos(2, 3, 'r')
-  val C3 = Pos(3, 3, 's')
-  val D3 = Pos(4, 3, 't')
-  val E3 = Pos(5, 3, 'u')
-  val F3 = Pos(6, 3, 'v')
-  val G3 = Pos(7, 3, 'w')
-  val H3 = Pos(8, 3, 'x')
-  val A4 = Pos(1, 4, 'y')
-  val B4 = Pos(2, 4, 'z')
-  val C4 = Pos(3, 4, 'A')
-  val D4 = Pos(4, 4, 'B')
-  val E4 = Pos(5, 4, 'C')
-  val F4 = Pos(6, 4, 'D')
-  val G4 = Pos(7, 4, 'E')
-  val H4 = Pos(8, 4, 'F')
-  val A5 = Pos(1, 5, 'G')
-  val B5 = Pos(2, 5, 'H')
-  val C5 = Pos(3, 5, 'I')
-  val D5 = Pos(4, 5, 'J')
-  val E5 = Pos(5, 5, 'K')
-  val F5 = Pos(6, 5, 'L')
-  val G5 = Pos(7, 5, 'M')
-  val H5 = Pos(8, 5, 'N')
-  val A6 = Pos(1, 6, 'O')
-  val B6 = Pos(2, 6, 'P')
-  val C6 = Pos(3, 6, 'Q')
-  val D6 = Pos(4, 6, 'R')
-  val E6 = Pos(5, 6, 'S')
-  val F6 = Pos(6, 6, 'T')
-  val G6 = Pos(7, 6, 'U')
-  val H6 = Pos(8, 6, 'V')
-  val A7 = Pos(1, 7, 'W')
-  val B7 = Pos(2, 7, 'X')
-  val C7 = Pos(3, 7, 'Y')
-  val D7 = Pos(4, 7, 'Z')
-  val E7 = Pos(5, 7, '0')
-  val F7 = Pos(6, 7, '1')
-  val G7 = Pos(7, 7, '2')
-  val H7 = Pos(8, 7, '3')
-  val A8 = Pos(1, 8, '4')
-  val B8 = Pos(2, 8, '5')
-  val C8 = Pos(3, 8, '6')
-  val D8 = Pos(4, 8, '7')
-  val E8 = Pos(5, 8, '8')
-  val F8 = Pos(6, 8, '9')
-  val G8 = Pos(7, 8, '!')
-  val H8 = Pos(8, 8, '?')
+  private val piotrChars : Array[Char] = Array(
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+    'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+    'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
+    'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F',
+    'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N',
+    'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V',
+    'W', 'X', 'Y', 'Z', '0', '1', '2', '3',
+    '4', '5', '6', '7', '8', '9', '!', '?'
+  )
+
+  val A1 = new Pos(0)
+  val B1 = new Pos(1)
+  val C1 = new Pos(2)
+  val D1 = new Pos(3)
+  val E1 = new Pos(4)
+  val F1 = new Pos(5)
+  val G1 = new Pos(6)
+  val H1 = new Pos(7)
+  val A2 = new Pos(8)
+  val B2 = new Pos(9)
+  val C2 = new Pos(10)
+  val D2 = new Pos(11)
+  val E2 = new Pos(12)
+  val F2 = new Pos(13)
+  val G2 = new Pos(14)
+  val H2 = new Pos(15)
+  val A3 = new Pos(16)
+  val B3 = new Pos(17)
+  val C3 = new Pos(18)
+  val D3 = new Pos(19)
+  val E3 = new Pos(20)
+  val F3 = new Pos(21)
+  val G3 = new Pos(22)
+  val H3 = new Pos(23)
+  val A4 = new Pos(24)
+  val B4 = new Pos(25)
+  val C4 = new Pos(26)
+  val D4 = new Pos(27)
+  val E4 = new Pos(28)
+  val F4 = new Pos(29)
+  val G4 = new Pos(30)
+  val H4 = new Pos(31)
+  val A5 = new Pos(32)
+  val B5 = new Pos(33)
+  val C5 = new Pos(34)
+  val D5 = new Pos(35)
+  val E5 = new Pos(36)
+  val F5 = new Pos(37)
+  val G5 = new Pos(38)
+  val H5 = new Pos(39)
+  val A6 = new Pos(40)
+  val B6 = new Pos(41)
+  val C6 = new Pos(42)
+  val D6 = new Pos(43)
+  val E6 = new Pos(44)
+  val F6 = new Pos(45)
+  val G6 = new Pos(46)
+  val H6 = new Pos(47)
+  val A7 = new Pos(48)
+  val B7 = new Pos(49)
+  val C7 = new Pos(50)
+  val D7 = new Pos(51)
+  val E7 = new Pos(52)
+  val F7 = new Pos(53)
+  val G7 = new Pos(54)
+  val H7 = new Pos(55)
+  val A8 = new Pos(56)
+  val B8 = new Pos(57)
+  val C8 = new Pos(58)
+  val D8 = new Pos(59)
+  val E8 = new Pos(60)
+  val F8 = new Pos(61)
+  val G8 = new Pos(62)
+  val H8 = new Pos(63)
 
   val all = List(A1, B1, C1, D1, E1, F1, G1, H1, A2, B2, C2, D2, E2, F2, G2, H2, A3, B3, C3, D3, E3, F3, G3, H3, A4, B4, C4, D4, E4, F4, G4, H4, A5, B5, C5, D5, E5, F5, G5, H5, A6, B6, C6, D6, E6, F6, G6, H6, A7, B7, C7, D7, E7, F7, G7, H7, A8, B8, C8, D8, E8, F8, G8, H8)
 
