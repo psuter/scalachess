@@ -51,11 +51,12 @@ case class Board(
   def seq(actions: Board => Valid[Board]*): Valid[Board] =
     actions.foldLeft(success(this): Valid[Board])(_ flatMap _)
 
-  def place(piece: Piece) = new {
+  class PlaceAt(piece: Piece) {
     def at(at: Pos): Valid[Board] =
       if (pieces contains at) failure("Cannot place at occupied " + at)
       else success(copy(pieces = pieces + ((at, piece))))
   }
+  def place(piece: Piece) = new PlaceAt(piece)
 
   def place(piece: Piece, at: Pos): Option[Board] =
     if (pieces contains at) None
@@ -77,7 +78,8 @@ case class Board(
     if (pieces contains takenPos)
   } yield copy(pieces = pieces - takenPos - orig + ((dest, piece)))
 
-  def move(orig: Pos) = new {
+
+  class MoveTo(orig: Pos) {
     def to(dest: Pos): Valid[Board] = {
       if (pieces contains dest) failure("Cannot move to occupied " + dest)
       else pieces get orig map { piece =>
@@ -85,6 +87,7 @@ case class Board(
       } toSuccess ("No piece at " + orig + " to move")
     }
   }
+  def move(orig: Pos) = new MoveTo(orig)
 
   lazy val occupation: Map[Color, Set[Pos]] = Color.all map { color =>
     (color, pieces collect { case (pos, piece) if piece is color => pos } toSet)
