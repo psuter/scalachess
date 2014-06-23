@@ -26,7 +26,7 @@ package object chess
   type Direction = Pos => Option[Pos]
   type Directions = List[Direction]
 
-  type AlivePieces = Map[Pos, Piece]
+  type AlivePieces = PosMap[Piece]
   type DeadPieces = List[Piece]
   type AllPieces = (AlivePieces, DeadPieces)
 

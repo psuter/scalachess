@@ -61,7 +61,7 @@ trait ChessTest
   implicit def enrichGame(game: Game) = new RichGame(game)
 
   def makeBoard(pieces: (Pos, Piece)*): Board =
-    Board(pieces toMap, History(), Variant.Standard)
+    Board(PosMap(pieces), History(), Variant.Standard)
 
   def makeBoard(str: String, variant: Variant) =
     Visual << str withVariant variant

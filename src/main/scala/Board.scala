@@ -14,8 +14,8 @@ case class Board(
 
   def apply(x: Int, y: Int): Option[Piece] = posAt(x, y) flatMap pieces.get
 
-  lazy val actors: Map[Pos, Actor] = pieces map {
-    case (pos, piece) => (pos, Actor(piece, pos, this))
+  lazy val actors: PosMap[Actor] = pieces mapValuesWithKey {
+    case (pos, piece) => Actor(piece, pos, this)
   }
 
   lazy val colorActors: Map[Color, List[Actor]] =
@@ -29,7 +29,7 @@ case class Board(
 
   def actorAt(at: Pos): Option[Actor] = actors get at
 
-  def piecesOf(c: Color): Map[Pos, Piece] = pieces filter (_._2 is c)
+  def piecesOf(c: Color): PosMap[Piece] = pieces filter (_._2 is c)
 
   lazy val kingPos: Map[Color, Pos] = pieces collect {
     case (pos, Piece(color, King)) => color -> pos
@@ -141,11 +141,11 @@ object Board {
   import Pos._
 
   def apply(pieces: Traversable[(Pos, Piece)], variant: Variant): Board =
-    Board(pieces.toMap, History(), variant)
+    Board(PosMap(pieces), History(), variant)
 
   def init(variant: Variant): Board =
     Board(pieces = variant.pieces, variant = variant)
 
   def empty(variant: Variant): Board =
-    Board(Map.empty, History(), variant)
+    Board(PosMap.empty[Piece], History(), variant)
 }
