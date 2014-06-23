@@ -12,26 +12,25 @@ trait ChessTest
 
   implicit def stringToBoard(str: String): Board = Visual << str
 
-  implicit def stringToBoardBuilder(str: String) = new {
-
+  class BoardBuilder(str: String) {
     def chess960: Board = makeBoard(str, Variant.Chess960)
   }
+  implicit def stringToBoardBuilder(str: String) = new BoardBuilder(str)
 
-  implicit def stringToSituationBuilder(str: String) = new {
-
+  class SituationBuilder(str: String) {
     def as(color: Color): Situation = Situation(Visual << str, color)
   }
+  implicit def stringToSituationBuilder(str: String) = new SituationBuilder(str)
 
-  implicit def richActor(actor: Actor) = new {
-
+  class RichActor(actor: Actor) {
     def threatens(to: Pos): Boolean = actor.piece.role match {
       case x: Projection => x.dir(actor.pos, to) exists { Actor.longRangeThreatens(actor.board, actor.pos, _, to) }
       case _             => actor.piece.eyes(actor.pos, to)
     }
   }
+  implicit def enrichActor(actor: Actor) = new RichActor(actor)
 
-  implicit def richGame(game: Game) = new {
-
+  class RichGame(game: Game) {
     def as(color: Color): Game = game.copy(player = color)
 
     def playMoves(moves: (Pos, Pos)*): Valid[Game] = playMoveList(moves)
@@ -59,9 +58,10 @@ trait ChessTest
 
     def withClock(c: Clock) = game.copy(clock = Some(c))
   }
+  implicit def enrichGame(game: Game) = new RichGame(game)
 
   def makeBoard(pieces: (Pos, Piece)*): Board =
-    Board(pieces toMap, History(), Variant.Standard)
+    Board(PosMap(pieces), History(), Variant.Standard)
 
   def makeBoard(str: String, variant: Variant) =
     Visual << str withVariant variant
