@@ -156,11 +156,15 @@ class OpeningBook(val openings: Seq[(String,String,String)]) {
       addBranch(g, h, n, tree)
     }
 
-    val g2 = time("Connection") {
-      connect(g1, false)
+    val g2 = time("Growth") {
+      connect(g1, true)
     }
 
-    g2
+    val g3 = time("Connection") {
+      connect(g2, false)
+    }
+
+    g3
   }
 
   private def time[T](desc: String)(op: =>T) : T = {
