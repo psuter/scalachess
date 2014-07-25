@@ -4,26 +4,40 @@ import scala.concurrent.duration._
 
 // All durations are expressed in seconds
 sealed trait Clock {
-  val limit: Int
-  val increment: Int
+  val whiteLimit: Int
+  val whiteIncrement: Int
+  val blackLimit: Option[Int] // if None, same as white's
+  val blackIncrement: Option[Int]
   val color: Color
   val whiteTime: Float
   val blackTime: Float
   val timerOption: Option[Double]
 
+  val asymmetricTimeControls: Boolean = (
+    Some(whiteLimit) != blackLimit ||
+    Some(whiteIncrement) != blackIncrement
+  )
+
+  def limit(c: Color) = c.fold(whiteLimit, blackLimit getOrElse whiteLimit)
+
+  def increment(c: Color) = c.fold(whiteIncrement, blackIncrement getOrElse whiteIncrement)
+
   def time(c: Color) = c.fold(whiteTime, blackTime)
 
   def outoftime(c: Color) = remainingTime(c) == 0
 
-  def remainingTime(c: Color) = math.max(0, limit - elapsedTime(c))
+  def remainingTime(c: Color) = math.max(0, limit(c) - elapsedTime(c))
 
   def remainingTimes = Color.all map { c => c -> remainingTime(c) } toMap
 
   def elapsedTime(c: Color) = time(c)
 
-  def limitInMinutes = limit / 60
+  def limitInMinutes(c: Color) = limit(c) / 60
 
-  def estimateTotalTime = limit + 30 * increment
+  def estimateTotalTime = (
+    (limit(White) + 30 * increment(White) +
+     limit(Black) + 30 * increment(Black)) / 2 
+  )
 
   def emergTime: Int = math.round(math.min(30, math.max(2, estimateTotalTime / 12)))
 
@@ -33,8 +47,19 @@ sealed trait Clock {
 
   def giveTime(c: Color, t: Float): Clock
 
-  def show = s"$limitInMinutes + $increment"
-  def showCondensed = s"$limitInMinutes+$increment"
+  private def desc(c: Color, sep: String) = limitInMinutes(c) + sep + increment(c)
+
+  def show = if(!asymmetricTimeControls) {
+    desc(White, " + ")
+  } else {
+    desc(White, "+") + " v " + desc(Black, "+")
+  } 
+
+  def showCondensed = if(!asymmetricTimeControls) {
+    desc(White, "+")
+  } else {
+    desc(White, "+") + "v" + desc(Black, "+")
+  }
 
   def showTime(time: Float) = {
     val hours = math.floor(time / 3600).toInt
@@ -50,15 +75,19 @@ sealed trait Clock {
   def switch: Clock
 
   def reset = Clock(
-    limit = limit,
-    increment = increment)
+    whiteLimit = whiteLimit,
+    whiteIncrement = whiteIncrement,
+    blackLimit = blackLimit,
+    blackIncrement = blackIncrement)
 
   protected def now = System.currentTimeMillis / 1000d
 }
 
 case class RunningClock(
-    limit: Int,
-    increment: Int,
+    whiteLimit: Int,
+    whiteIncrement: Int,
+    blackLimit: Option[Int],
+    blackIncrement: Option[Int],
     color: Color,
     whiteTime: Float,
     blackTime: Float,
@@ -80,7 +109,7 @@ case class RunningClock(
         Clock.maxLagToCompensate))
     addTime(
       color,
-      (math.max(0, spentTime - lagCompensation) - increment)
+      (math.max(0, spentTime - lagCompensation) - increment(color))
     ).copy(
         color = !color,
         timer = t
@@ -88,12 +117,15 @@ case class RunningClock(
   }
 
   def stop = PausedClock(
-    limit = limit,
-    increment = increment,
+    whiteLimit = whiteLimit,
+    whiteIncrement = whiteIncrement,
+    blackLimit = blackLimit,
+    blackIncrement = blackIncrement,
     color = color,
     whiteTime = whiteTime + (if (color == White) (now - timer).toFloat else 0),
     blackTime = blackTime + (if (color == Black) (now - timer).toFloat else 0))
 
+  // add = "count as elapsed"
   def addTime(c: Color, t: Float): RunningClock = c match {
     case White => copy(whiteTime = whiteTime + t)
     case Black => copy(blackTime = blackTime + t)
@@ -105,8 +137,10 @@ case class RunningClock(
 }
 
 case class PausedClock(
-    limit: Int,
-    increment: Int,
+    whiteLimit: Int,
+    whiteIncrement: Int,
+    blackLimit: Option[Int],
+    blackIncrement: Option[Int],
     color: Color,
     whiteTime: Float,
     blackTime: Float) extends Clock {
@@ -128,8 +162,10 @@ case class PausedClock(
     color = color,
     whiteTime = whiteTime,
     blackTime = blackTime,
-    increment = increment,
-    limit = limit,
+    whiteLimit = whiteLimit,
+    whiteIncrement = whiteIncrement,
+    blackLimit = blackLimit,
+    blackIncrement = blackIncrement,
     timer = now)
 }
 
@@ -142,16 +178,32 @@ object Clock {
   val naturalLag = 0f
 
   def apply(
-    limit: Int,
-    increment: Int): PausedClock = {
-    val clock = PausedClock(
-      limit = limit / 60 * 60, // round to minutes
-      increment = increment,
+    whiteLimit: Int,
+    whiteIncrement: Int,
+    blackLimit: Option[Int],
+    blackIncrement: Option[Int]): PausedClock = {
+
+    val clock0 = PausedClock(
+      whiteLimit = whiteLimit / 60 * 60, // round to minutes
+      whiteIncrement = whiteIncrement,
+      blackLimit = blackLimit map (l => l / 60 * 60),
+      blackIncrement = blackIncrement,
       color = White,
       whiteTime = 0f,
       blackTime = 0f)
-    if (clock.limit == 0) clock.giveTime(White, minInitLimit).giveTime(Black, minInitLimit)
-    else clock
+    
+    val clock1 = if (clock0.limit(White) == 0) clock0.giveTime(White, minInitLimit) else clock0
+    val clock2 = if (clock1.limit(Black) == 0) clock1.giveTime(Black, minInitLimit) else clock1
+
+    clock2
+  }
+
+  def apply(limit: Int, increment: Int): PausedClock = {
+    apply(limit, increment, None, None)
+  }
+
+  def apply(limit: Int, increment: Int, blackLimit: Int, blackIncrement: Int): PausedClock = {
+    apply(limit, increment, Some(blackLimit), Some(blackIncrement))
   }
 
   def timeString(time: Int) = periodFormatter.print(

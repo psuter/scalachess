@@ -24,13 +24,16 @@ class ClockTest extends ChessTest {
   }
   "create a clock" should {
     "with time" in {
-      Clock(60, 10).limit must_== 60
+      Clock(60, 10).limit(White) must_== 60
+      Clock(60, 10).limit(Black) must_== 60
     }
     "with increment" in {
-      Clock(60, 10).increment must_== 10
+      Clock(60, 10).increment(White) must_== 10
+      Clock(60, 10).increment(Black) must_== 10
     }
     "with few time" in {
-      Clock(0, 10).limit must_== 0
+      Clock(0, 10).limit(White) must_== 0
+      Clock(0, 10).limit(Black) must_== 0
     }
   }
   "lag compensation" should {
